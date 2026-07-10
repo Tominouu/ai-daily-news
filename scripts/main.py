@@ -2,12 +2,14 @@
 """AI News Daily Briefing — fetch RSS, summarize with Mistral, send via Gmail SMTP."""
 
 import os
+import re
 import sys
 import json
 import smtplib
 import logging
 from datetime import date
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 import feedparser
 import requests
@@ -104,6 +106,80 @@ def summarize(api_key: str, prompt: str, model: str = "mistral-small-latest") ->
     return resp.json()["choices"][0]["message"]["content"]
 
 
+def md_to_html(text: str) -> str:
+    lines = text.split("\n")
+    html = ""
+    in_list = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            if in_list:
+                html += "</ul>\n"
+                in_list = False
+            html += f"<h2>{stripped[3:]}</h2>\n"
+        elif stripped.startswith("### "):
+            if in_list:
+                html += "</ul>\n"
+                in_list = False
+            html += f"<h3>{stripped[4:]}</h3>\n"
+        elif stripped.startswith("- "):
+            if not in_list:
+                html += "<ul>\n"
+                in_list = True
+            item = stripped[2:]
+            item = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", item)
+            html += f"  <li>{item}</li>\n"
+        elif stripped.startswith("🔗"):
+            link = stripped[2:].strip()
+            html += f'<p><a href="{link}">{link}</a></p>\n'
+        elif stripped.startswith("📡"):
+            html += f'<p class="meta">{stripped}</p>\n'
+        elif stripped.startswith("---"):
+            if in_list:
+                html += "</ul>\n"
+                in_list = False
+            html += "<hr>\n"
+        else:
+            if in_list:
+                html += "</ul>\n"
+                in_list = False
+            if stripped:
+                processed = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", stripped)
+                processed = re.sub(r"(https?://\S+)", r'<a href="\1">\1</a>', processed)
+                html += f"<p>{processed}</p>\n"
+    if in_list:
+        html += "</ul>\n"
+    return html
+
+
+HTML_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+<tr><td align="center" style="padding:24px 16px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+<tr><td style="padding:32px 32px 16px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:12px 12px 0 0;text-align:center">
+<h1 style="margin:0;color:#fff;font-size:24px;font-weight:700">🤖 Bilan IA</h1>
+<p style="margin:6px 0 0;color:rgba(255,255,255,.8);font-size:14px">{date}</p>
+</td></tr>
+<tr><td style="padding:28px 32px;font-size:15px;line-height:1.6;color:#1a1a2e">
+{body}
+</td></tr>
+<tr><td style="padding:16px 32px 24px;border-top:1px solid #eee;text-align:center;font-size:12px;color:#999">
+Généré automatiquement chaque matin — <a href="https://github.com/tom/ai-daily-news" style="color:#667eea">ai-daily-news</a>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
 def send_email(
     content: str,
     gmail_user: str,
@@ -111,10 +187,15 @@ def send_email(
     to_email: str,
 ):
     today = date.today().strftime("%d/%m/%Y")
-    msg = MIMEText(content, "plain", "utf-8")
+    body_html = md_to_html(content)
+    html = HTML_TEMPLATE.replace("{date}", today).replace("{body}", body_html)
+
+    msg = MIMEMultipart("alternative")
     msg["Subject"] = f"🤖 Bilan IA — {today}"
     msg["From"] = gmail_user
     msg["To"] = to_email
+    msg.attach(MIMEText(content, "plain", "utf-8"))
+    msg.attach(MIMEText(html, "html", "utf-8"))
 
     logger.info("Sending email to %s…", to_email)
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
