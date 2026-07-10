@@ -5,11 +5,15 @@ import os
 import re
 import sys
 import json
+import asyncio
+import tempfile
 import smtplib
 import logging
 from datetime import date
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
 import feedparser
 import requests
@@ -180,22 +184,66 @@ Généré automatiquement chaque matin — <a href="https://github.com/tom/ai-da
 </html>"""
 
 
+def clean_for_audio(text: str) -> str:
+    lines = text.split("\n")
+    out = []
+    for line in lines:
+        s = line.strip()
+        s = re.sub(r"🔗\s*\S+", "", s)
+        s = re.sub(r"https?://\S+", "", s)
+        s = re.sub(r"\*\*|\*|__", "", s)
+        s = re.sub(r"_ _", "", s)
+        s = re.sub(r"##+\s*", "", s)
+        s = re.sub(r"---", "", s)
+        s = re.sub(r"\s+", " ", s).strip()
+        if s:
+            out.append(s)
+    return "\n".join(out)
+
+
+async def generate_audio(text: str, output_path: str):
+    import edge_tts
+
+    today = date.today().strftime("%d %B %Y")
+    intro = f"Bonjour. Voici le bilan intelligence artificielle du {today}."
+    outro = "Merci d'avoir écouté ce bilan. À demain pour de nouvelles actualités."
+    full = f"{intro}\n\n{clean_for_audio(text)}\n\n{outro}"
+
+    voice = "fr-FR-LucienMultilingualNeural"
+    logger.info("Generating audio with %s...", voice)
+    communicate = edge_tts.Communicate(full, voice)
+    await communicate.save(output_path)
+    logger.info("Audio saved: %s (size: %.1f MB)", output_path, os.path.getsize(output_path) / 1_000_000)
+
+
 def send_email(
     content: str,
     gmail_user: str,
     gmail_password: str,
     to_email: str,
+    audio_path: str | None = None,
 ):
     today = date.today().strftime("%d/%m/%Y")
     body_html = md_to_html(content)
     html = HTML_TEMPLATE.replace("{date}", today).replace("{body}", body_html)
 
-    msg = MIMEMultipart("alternative")
+    msg = MIMEMultipart("mixed")
     msg["Subject"] = f"🤖 Bilan IA — {today}"
     msg["From"] = gmail_user
     msg["To"] = to_email
-    msg.attach(MIMEText(content, "plain", "utf-8"))
-    msg.attach(MIMEText(html, "html", "utf-8"))
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(content, "plain", "utf-8"))
+    alt.attach(MIMEText(html, "html", "utf-8"))
+    msg.attach(alt)
+
+    if audio_path and os.path.exists(audio_path):
+        with open(audio_path, "rb") as f:
+            audio = MIMEBase("audio", "mp3")
+            audio.set_payload(f.read())
+            encoders.encode_base64(audio)
+            audio.add_header("Content-Disposition", "attachment", filename="bilan-ia.mp3")
+            msg.attach(audio)
 
     logger.info("Sending email to %s…", to_email)
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
@@ -236,7 +284,18 @@ def main():
     sources_list = ", ".join(s["name"] for s in sources)
     full = f"{summary}\n\n---\n📡 *BILAN IA — {date.today().strftime('%d/%m/%Y')}*\n_Sources: {sources_list}_"
 
-    send_email(full, gmail_user, gmail_pass, to_email)
+    audio_path: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            audio_path = tmp.name
+        asyncio.run(generate_audio(summary, audio_path))
+    except Exception as exc:
+        logger.warning("Audio generation failed: %s — sending text only", exc)
+
+    send_email(full, gmail_user, gmail_pass, to_email, audio_path)
+
+    if audio_path and os.path.exists(audio_path):
+        os.unlink(audio_path)
 
 
 if __name__ == "__main__":
