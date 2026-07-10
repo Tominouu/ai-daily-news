@@ -5,7 +5,6 @@ import os
 import re
 import sys
 import json
-import asyncio
 import tempfile
 import smtplib
 import logging
@@ -201,18 +200,17 @@ def clean_for_audio(text: str) -> str:
     return "\n".join(out)
 
 
-async def generate_audio(text: str, output_path: str):
-    import edge_tts
+def generate_audio(text: str, output_path: str):
+    from gtts import gTTS
 
     today = date.today().strftime("%d %B %Y")
     intro = f"Bonjour. Voici le bilan intelligence artificielle du {today}."
     outro = "Merci d'avoir écouté ce bilan. À demain pour de nouvelles actualités."
     full = f"{intro}\n\n{clean_for_audio(text)}\n\n{outro}"
 
-    voice = "fr-FR-LucienMultilingualNeural"
-    logger.info("Generating audio with %s...", voice)
-    communicate = edge_tts.Communicate(full, voice)
-    await communicate.save(output_path)
+    logger.info("Generating audio (gTTS)...")
+    tts = gTTS(text=full, lang="fr", slow=False)
+    tts.save(output_path)
     logger.info("Audio saved: %s (size: %.1f MB)", output_path, os.path.getsize(output_path) / 1_000_000)
 
 
@@ -288,7 +286,7 @@ def main():
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
             audio_path = tmp.name
-        asyncio.run(generate_audio(summary, audio_path))
+        generate_audio(summary, audio_path)
     except Exception as exc:
         logger.warning("Audio generation failed: %s — sending text only", exc)
 
