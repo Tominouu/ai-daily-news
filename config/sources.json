@@ -1,0 +1,17 @@
+[
+  {"name": "TechCrunch AI",         "url": "https://techcrunch.com/category/artificial-intelligence/feed/"},
+  {"name": "The Verge AI",          "url": "https://www.theverge.com/ai-artificial-intelligence/rss.xml"},
+  {"name": "VentureBeat AI",        "url": "https://venturebeat.com/category/ai/feed/"},
+  {"name": "Ars Technica AI",       "url": "https://arstechnica.com/category/ai/feed/"},
+  {"name": "MIT Tech Review",       "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed/"},
+  {"name": "Google AI",             "url": "https://blog.google/technology/ai/rss/"},
+  {"name": "Meta AI",               "url": "https://ai.meta.com/blog/rss/"},
+  {"name": "OpenAI",                "url": "https://openai.com/blog/rss/"},
+  {"name": "Anthropic",             "url": "https://www.anthropic.com/feed.xml"},
+  {"name": "DeepMind",              "url": "https://deepmind.google/blog/rss/"},
+  {"name": "Hugging Face",          "url": "https://huggingface.co/blog/feed.xml"},
+  {"name": "arXiv IA",              "url": "http://export.arxiv.org/rss/cs.AI"},
+  {"name": "Le Monde IA",           "url": "https://www.lemonde.fr/intelligence-artificielle/rss_full.xml"},
+  {"name": "France-Info IA",        "url": "https://www.francetvinfo.fr/intelligence-artificielle/rss"},
+  {"name": "Papers With Code",      "url": "https://paperswithcode.com/rss/latest"}
+]
