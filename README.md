@@ -61,7 +61,7 @@ Le workflow s'exécute aussi automatiquement chaque jour à 6h UTC.
 └── README.md
 ```
 
-## 📡 Sources RSS incluses
+## Sources RSS incluses
 
 | Source | Description |
 |---|---|
@@ -81,7 +81,7 @@ Le workflow s'exécute aussi automatiquement chaque jour à 6h UTC.
 | [France-Info IA](https://www.francetvinfo.fr/intelligence-artificielle/) | Actu française |
 | [Papers With Code](https://paperswithcode.com) | Recherche & code |
 
-## 📧 Ce que tu reçois
+## Ce que tu reçois
 
 L'email HTML contient :
 - Un en-tête avec la date du jour
@@ -90,7 +90,7 @@ L'email HTML contient :
 - Tous les liens vers les articles originaux
 - Un fichier **MP3** en pièce jointe avec la version audio
 
-## 🔧 Personnalisation
+## Personnalisation
 
 ### Ajouter / retirer des sources
 
