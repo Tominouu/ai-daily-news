@@ -214,41 +214,8 @@ def generate_audio_gtts(text: str, output_path: str):
     logger.info("Audio saved: %s (size: %.1f MB)", output_path, os.path.getsize(output_path) / 1_000_000)
 
 
-def generate_audio_elevenlabs(text: str, output_path: str, api_key: str):
-    today = date.today().strftime("%d %B %Y")
-    intro = f"Bonjour. Voici le bilan intelligence artificielle du {today}."
-    outro = "Merci d'avoir écouté ce bilan. À demain pour de nouvelles actualités."
-    full = f"{intro}\n\n{clean_for_audio(text)}\n\n{outro}"
-
-    if len(full) > 9000:
-        logger.warning("Text too long for ElevenLabs free tier (%d chars), truncating…", len(full))
-        full = full[:9000]
-
-    logger.info("Generating audio (ElevenLabs)...")
-    resp = requests.post(
-        "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
-        headers={
-            "xi-api-key": api_key,
-            "Content-Type": "application/json",
-        },
-        json={
-            "text": full,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {"stability": 0.4, "similarity_boost": 0.7},
-        },
-        timeout=120,
-    )
-    resp.raise_for_status()
-    with open(output_path, "wb") as f:
-        f.write(resp.content)
-    logger.info("Audio saved: %s (size: %.1f MB)", output_path, os.path.getsize(output_path) / 1_000_000)
-
-
-def generate_audio(text: str, output_path: str, elevenlabs_key: str | None = None):
-    if elevenlabs_key:
-        generate_audio_elevenlabs(text, output_path, elevenlabs_key)
-    else:
-        generate_audio_gtts(text, output_path)
+def generate_audio(text: str, output_path: str, _unused: str | None = None):
+    generate_audio_gtts(text, output_path)
 
 
 def send_email(
@@ -295,7 +262,7 @@ def main():
     gmail_user = os.environ.get("GMAIL_USER")
     gmail_pass = os.environ.get("GMAIL_APP_PASSWORD")
     to_email = os.environ.get("TO_EMAIL", gmail_user)
-    elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY")
+
 
     if not all([mistral_key, gmail_user, gmail_pass]):
         logger.error(
@@ -324,7 +291,7 @@ def main():
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
             audio_path = tmp.name
-        generate_audio(summary, audio_path, elevenlabs_key)
+        generate_audio(summary, audio_path)
     except Exception as exc:
         logger.warning("Audio generation failed: %s — sending text only", exc)
 
