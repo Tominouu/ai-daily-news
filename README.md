@@ -1,10 +1,10 @@
-# 🤖 Bilan IA
+# Bilan IA
 
 **Newsletter quotidienne sur l'actualité de l'IA — automatique, gratuite, open source.**
 
 Chaque matin à 8h, ce pipeline GitHub Actions récupère les articles des meilleures sources IA, les résume avec Mistral et t'envoie le tout par email avec un fichier audio MP3.
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 - **15+ sources RSS** — TechCrunch, OpenAI, Anthropic, arXiv, Le Monde, Hugging Face…
 - **Résumé IA** — Chaque article est synthétisé en 2-3 phrases par Mistral (free tier)
@@ -12,13 +12,13 @@ Chaque matin à 8h, ce pipeline GitHub Actions récupère les articles des meill
 - **Version audio** — Un fichier MP3 est joint à l'email, lu par synthèse vocale (gTTS)
 - **100% gratuit** — GitHub Actions + APIs gratuites, rien à payer
 
-## 📋 Prérequis
+## Prérequis
 
 - Un compte [GitHub](https://github.com)
 - Une clé API [Mistral](https://console.mistral.ai) (gratuite, ~500 tokens/jour consommés)
 - Un compte Gmail / Google Workspace avec un **mot de passe d'application**
 
-## 🚀 Installation
+## Installation
 
 ### 1. Crée le dépôt GitHub
 
@@ -86,7 +86,7 @@ Le workflow s'exécute aussi automatiquement chaque jour à 6h UTC.
 L'email HTML contient :
 - Un en-tête avec la date du jour
 - Les articles regroupés par source avec un résumé de 2-3 phrases chacun
-- Une section **📌 Tendances du jour** qui dégage les grandes tendances
+- Une section ** Tendances du jour** qui dégage les grandes tendances
 - Tous les liens vers les articles originaux
 - Un fichier **MP3** en pièce jointe avec la version audio
 
@@ -126,7 +126,7 @@ model="mistral-large-latest"   # meilleure qualité
 
 Dans `scripts/main.py`, remplace `generate_audio_gtts` par une autre implémentation (ElevenLabs, Google Cloud TTS…).
 
-## 📊 Consommation
+## Consommation
 
 | Service | Usage quotidien | Limite gratuite |
 |---|---|---|
@@ -135,6 +135,6 @@ Dans `scripts/main.py`, remplace `generate_audio_gtts` par une autre implémenta
 | GitHub Actions | ~2 min d'exécution | 2000 min/mois |
 | gTTS | 1 fichier audio | Illimité |
 
-## 📄 Licence
+## Licence
 
 MIT — fais ce que tu veux du projet.
