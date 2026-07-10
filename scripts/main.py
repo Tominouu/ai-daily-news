@@ -200,7 +200,7 @@ def clean_for_audio(text: str) -> str:
     return "\n".join(out)
 
 
-def generate_audio(text: str, output_path: str):
+def generate_audio_gtts(text: str, output_path: str):
     from gtts import gTTS
 
     today = date.today().strftime("%d %B %Y")
@@ -212,6 +212,38 @@ def generate_audio(text: str, output_path: str):
     tts = gTTS(text=full, lang="fr", slow=False)
     tts.save(output_path)
     logger.info("Audio saved: %s (size: %.1f MB)", output_path, os.path.getsize(output_path) / 1_000_000)
+
+
+def generate_audio_google(text: str, output_path: str, api_key: str):
+    today = date.today().strftime("%d %B %Y")
+    intro = f"Bonjour. Voici le bilan intelligence artificielle du {today}."
+    outro = "Merci d'avoir écouté ce bilan. À demain pour de nouvelles actualités."
+    full = f"{intro}\n\n{clean_for_audio(text)}\n\n{outro}"
+
+    logger.info("Generating audio (Google Cloud TTS)...")
+    resp = requests.post(
+        f"https://texttospeech.googleapis.com/v1/text:synthesize?key={api_key}",
+        json={
+            "input": {"text": full},
+            "voice": {"languageCode": "fr-FR", "name": "fr-FR-Neural2-A"},
+            "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0},
+        },
+        timeout=60,
+    )
+    resp.raise_for_status()
+    audio_b64 = resp.json()["audioContent"]
+
+    import base64
+    with open(output_path, "wb") as f:
+        f.write(base64.b64decode(audio_b64))
+    logger.info("Audio saved: %s (size: %.1f MB)", output_path, os.path.getsize(output_path) / 1_000_000)
+
+
+def generate_audio(text: str, output_path: str, google_key: str | None = None):
+    if google_key:
+        generate_audio_google(text, output_path, google_key)
+    else:
+        generate_audio_gtts(text, output_path)
 
 
 def send_email(
@@ -258,6 +290,7 @@ def main():
     gmail_user = os.environ.get("GMAIL_USER")
     gmail_pass = os.environ.get("GMAIL_APP_PASSWORD")
     to_email = os.environ.get("TO_EMAIL", gmail_user)
+    google_tts_key = os.environ.get("GOOGLE_TTS_API_KEY")
 
     if not all([mistral_key, gmail_user, gmail_pass]):
         logger.error(
@@ -286,7 +319,7 @@ def main():
     try:
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
             audio_path = tmp.name
-        generate_audio(summary, audio_path)
+        generate_audio(summary, audio_path, google_tts_key)
     except Exception as exc:
         logger.warning("Audio generation failed: %s — sending text only", exc)
 
