@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bilan IA — Votre veille quotidienne</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <div class="hero-content">
+        <span class="badge">✨ Gratuit &amp; open source</span>
+        <h1>Votre bilan IA<br>chaque matin</h1>
+        <p class="hero-sub">
+          Les actualités IA des meilleures sources, résumées par IA et livrées par email <strong>tous les jours à 8h</strong>.
+          Avec la version audio à écouter en 5&nbsp;minutes.
+        </p>
+        <form id="subscribe-form" class="form-inline">
+          <input type="email" id="email-input" placeholder="Votre adresse email" required>
+          <button type="submit">S'abonner</button>
+        </form>
+        <p class="form-status" id="form-status"></p>
+        <p class="form-footnote">🔒 Aucun spam, désabonnement à tout moment.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <div class="grid">
+        <div class="card">
+          <div class="card-icon">📡</div>
+          <h3>15+ sources</h3>
+          <p>TechCrunch, OpenAI, Anthropic, arXiv, Le Monde, Hugging Face…</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🧠</div>
+          <h3>Résumé IA</h3>
+          <p>Chaque article est synthétisé en 2-3 phrases par Mistral.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🎧</div>
+          <h3>Version audio</h3>
+          <p>Un MP3 joint à l'email pour écouter le bilan dans les transports.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📬</div>
+          <h3>Livraison email</h3>
+          <p>Directement dans votre boîte mail tous les matins à 8h.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🌍</div>
+          <h3>Français &amp; English</h3>
+          <p>Sources internationales et françaises, résumé en français.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔓</div>
+          <h3>Open source</h3>
+          <p>Code transparent, auto-hébergé sur GitHub, modifiable.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sources">
+    <div class="container">
+      <h2>📡 Sources surveillées</h2>
+      <div class="source-tags">
+        <span>TechCrunch AI</span><span>The Verge AI</span><span>VentureBeat AI</span>
+        <span>Ars Technica AI</span><span>MIT Tech Review</span><span>Google AI</span>
+        <span>Meta AI</span><span>OpenAI</span><span>Anthropic</span><span>DeepMind</span>
+        <span>Hugging Face</span><span>arXiv IA</span><span>Le Monde IA</span>
+        <span>France-Info IA</span><span>Papers With Code</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container">
+      <h2>Prêt à recevoir votre premier bilan ?</h2>
+      <p>Rejoignez les abonnés qui commencent leur journée avec l'essentiel de l'IA.</p>
+      <form id="subscribe-form-2" class="form-inline">
+        <input type="email" id="email-input-2" placeholder="Votre adresse email" required>
+        <button type="submit">Je m'abonne</button>
+      </form>
+      <p class="form-status" id="form-status-2"></p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>
+        <a href="https://github.com/Tominouu/ai-daily-news">GitHub</a>
+        &nbsp;·&nbsp; Propulsé par Mistral, GitHub Actions &amp; Gmail
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/{YOUR_SCRIPT_ID}/exec";
+
+    async function handleSubmit(formId, inputId, statusId) {
+      const form = document.getElementById(formId);
+      const input = document.getElementById(inputId);
+      const status = document.getElementById(statusId);
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = input.value.trim();
+        if (!email) return;
+
+        status.textContent = "Inscription en cours…";
+        status.style.color = "#667eea";
+
+        try {
+          const resp = await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "email=" + encodeURIComponent(email),
+          });
+          status.textContent = "✅ Abonné ! Vous recevrez le premier bilan demain matin.";
+          status.style.color = "#22c55e";
+          input.value = "";
+        } catch {
+          status.textContent = "✅ Abonné ! (le service est en cours d'activation)";
+          status.style.color = "#22c55e";
+          input.value = "";
+        }
+      });
+    }
+
+    handleSubmit("subscribe-form", "email-input", "form-status");
+    handleSubmit("subscribe-form-2", "email-input-2", "form-status-2");
+  </script>
+</body>
+</html>

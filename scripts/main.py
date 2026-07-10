@@ -4,7 +4,9 @@
 import os
 import re
 import sys
+import csv
 import json
+import io
 import tempfile
 import smtplib
 import logging
@@ -183,6 +185,26 @@ Généré automatiquement chaque matin — <a href="https://github.com/tom/ai-da
 </html>"""
 
 
+def fetch_subscribers(csv_url: str | None) -> list[str]:
+    if not csv_url:
+        return []
+    try:
+        resp = requests.get(csv_url, timeout=15)
+        resp.raise_for_status()
+        reader = csv.DictReader(io.StringIO(resp.text))
+        emails = []
+        for row in reader:
+            email = row.get("email", "").strip().lower()
+            active = row.get("active", "oui").strip().lower()
+            if email and "@" in email and active in ("oui", "yes", "true", "1", ""):
+                emails.append(email)
+        logger.info("Fetched %d subscribers from Google Sheet", len(emails))
+        return emails
+    except Exception as exc:
+        logger.warning("Failed to fetch subscribers: %s", exc)
+        return []
+
+
 def clean_for_audio(text: str) -> str:
     lines = text.split("\n")
     out = []
@@ -222,7 +244,7 @@ def send_email(
     content: str,
     gmail_user: str,
     gmail_password: str,
-    to_email: str,
+    to_emails: list[str],
     audio_path: str | None = None,
 ):
     today = date.today().strftime("%d/%m/%Y")
@@ -232,7 +254,9 @@ def send_email(
     msg = MIMEMultipart("mixed")
     msg["Subject"] = f"🤖 Bilan IA — {today}"
     msg["From"] = gmail_user
-    msg["To"] = to_email
+    msg["To"] = gmail_user
+    if to_emails:
+        msg["Bcc"] = ", ".join(to_emails)
 
     alt = MIMEMultipart("alternative")
     alt.attach(MIMEText(content, "plain", "utf-8"))
@@ -247,7 +271,7 @@ def send_email(
             audio.add_header("Content-Disposition", "attachment", filename="bilan-ia.mp3")
             msg.attach(audio)
 
-    logger.info("Sending email to %s…", to_email)
+    logger.info("Sending email to %d recipient(s)…", len(to_emails))
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
         server.login(gmail_user, gmail_password)
@@ -262,7 +286,7 @@ def main():
     gmail_user = os.environ.get("GMAIL_USER")
     gmail_pass = os.environ.get("GMAIL_APP_PASSWORD")
     to_email = os.environ.get("TO_EMAIL", gmail_user)
-
+    sheet_csv_url = os.environ.get("GOOGLE_SHEET_CSV_URL")
 
     if not all([mistral_key, gmail_user, gmail_pass]):
         logger.error(
@@ -276,9 +300,14 @@ def main():
     articles = fetch_articles(sources)
     logger.info("Fetched %d unique articles", len(articles))
 
+    subscribers = fetch_subscribers(sheet_csv_url)
+    all_recipients = [to_email] + [e for e in subscribers if e != to_email]
+    if not all_recipients:
+        all_recipients = [to_email]
+
     if not articles:
         logger.warning("No articles — sending alert email")
-        send_email("⚠️ Aucun article trouvé aujourd'hui.", gmail_user, gmail_pass, to_email)
+        send_email("⚠️ Aucun article trouvé aujourd'hui.", gmail_user, gmail_pass, all_recipients)
         return
 
     prompt = build_prompt(articles)
@@ -295,7 +324,7 @@ def main():
     except Exception as exc:
         logger.warning("Audio generation failed: %s — sending text only", exc)
 
-    send_email(full, gmail_user, gmail_pass, to_email, audio_path)
+    send_email(full, gmail_user, gmail_pass, all_recipients, audio_path)
 
     if audio_path and os.path.exists(audio_path):
         os.unlink(audio_path)
