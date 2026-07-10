@@ -1,131 +1,140 @@
-# 🤖 Bilan IA — Daily AI News Briefing
+# 🤖 Bilan IA
 
-每天早上自动汇总顶级AI新闻源，通过邮件发送结构化简报（含音频版本）。
+**Newsletter quotidienne sur l'actualité de l'IA — automatique, gratuite, open source.**
 
-## ✨ 功能
+Chaque matin à 8h, ce pipeline GitHub Actions récupère les articles des meilleures sources IA, les résume avec Mistral et t'envoie le tout par email avec un fichier audio MP3.
 
-- **15个以上RSS源** — TechCrunch、OpenAI、Anthropic、arXiv、Le Monde、Hugging Face等
-- **AI摘要** — 每条新闻用Mistral（免费层）总结2-3句话
-- **每日邮件** — 每天UTC 6:00（巴黎8:00）通过Gmail SMTP发送
-- **音频版本** — 生成MP3附件随邮件发送（gTTS）
-- **100%免费** — GitHub Actions + 免费API层
+## ✨ Fonctionnalités
 
-## 📋 先决条件
+- **15+ sources RSS** — TechCrunch, OpenAI, Anthropic, arXiv, Le Monde, Hugging Face…
+- **Résumé IA** — Chaque article est synthétisé en 2-3 phrases par Mistral (free tier)
+- **Email quotidien** — Envoi automatisé à 6h UTC (8h Paris) via Gmail SMTP
+- **Version audio** — Un fichier MP3 est joint à l'email, lu par synthèse vocale (gTTS)
+- **100% gratuit** — GitHub Actions + APIs gratuites, rien à payer
 
-- 一个 [GitHub](https://github.com) 账号
-- 一个 [Mistral](https://console.mistral.ai) API密钥（免费层，每天约需500个token）
-- 一个 Gmail/Google Workspace 账号及**应用专用密码**（用于邮件发送）
+## 📋 Prérequis
 
-## 🚀 安装
+- Un compte [GitHub](https://github.com)
+- Une clé API [Mistral](https://console.mistral.ai) (gratuite, ~500 tokens/jour consommés)
+- Un compte Gmail / Google Workspace avec un **mot de passe d'application**
 
-### 1. 创建仓库并克隆
+## 🚀 Installation
+
+### 1. Crée le dépôt GitHub
 
 ```bash
 gh repo create ai-daily-news --public --clone
 cd ai-daily-news
 ```
 
-### 2. 复制文件
+### 2. Copie les fichiers du projet
 
-将所有项目文件复制到仓库目录中。
+Place tous les fichiers de ce dépôt dans le dossier du projet.
 
-### 3. 添加GitHub Secrets
+### 3. Ajoute les secrets GitHub
 
 ```bash
-gh secret set MISTRAL_API_KEY          # 在 https://console.mistral.ai 获取
-gh secret set GMAIL_USER               # 你的 Gmail 地址
-gh secret set GMAIL_APP_PASSWORD       # 在 https://myaccount.google.com/apppasswords 获取
+gh secret set MISTRAL_API_KEY          # https://console.mistral.ai
+gh secret set GMAIL_USER               # ton adresse Gmail
+gh secret set GMAIL_APP_PASSWORD       # https://myaccount.google.com/apppasswords
 ```
 
-### 4. 推送并测试
+### 4. Pousse et teste
 
 ```bash
 git push
 gh workflow run "Bilan IA Quotidien"
 ```
 
-## 📁 项目结构
+Le workflow s'exécute aussi automatiquement chaque jour à 6h UTC.
+
+## 📁 Structure du projet
 
 ```
 ├── .github/workflows/
-│   └── daily-news.yml     # GitHub Actions workflow（cron 6:00 UTC）
+│   └── daily-news.yml       # Workflow GitHub Actions (cron 6h UTC)
 ├── scripts/
-│   └── main.py            # 主脚本：抓取RSS → 摘要 → 邮件
+│   └── main.py              # Script principal : fetch RSS → résumé → email
 ├── config/
-│   └── sources.json       # RSS源配置
-├── requirements.txt       # Python依赖
+│   └── sources.json         # Configuration des flux RSS
+├── requirements.txt         # Dépendances Python
 └── README.md
 ```
 
-## 📡 RSS源
+## 📡 Sources RSS incluses
 
-| 来源 | 内容 |
+| Source | Description |
 |---|---|
-| TechCrunch AI | 科技创业与AI新闻 |
-| The Verge AI | 科技与文化 |
-| VentureBeat AI | 商业AI |
-| Ars Technica AI | 深度技术分析 |
-| MIT Tech Review | 前沿研究 |
-| Google AI | Google研究博客 |
-| Meta AI | Meta研究博客 |
-| OpenAI | OpenAI博客 |
-| Anthropic | Anthropic博客 |
-| DeepMind | DeepMind博客 |
-| Hugging Face | 开源ML社区 |
-| arXiv IA | 学术预印本 |
-| Le Monde IA | 法国新闻（法语） |
-| France-Info IA | 法国新闻（法语） |
-| Papers With Code | 研究论文与代码 |
+| [TechCrunch AI](https://techcrunch.com/category/artificial-intelligence/) | Startups & actu IA |
+| [The Verge AI](https://www.theverge.com/ai-artificial-intelligence) | Tech & culture |
+| [VentureBeat AI](https://venturebeat.com/category/ai/) | Business & IA |
+| [Ars Technica AI](https://arstechnica.com/category/ai/) | Analyse technique |
+| [MIT Tech Review](https://www.technologyreview.com/topic/artificial-intelligence/) | Recherche de pointe |
+| [Google AI](https://blog.google/technology/ai/) | Blog Google Research |
+| [Meta AI](https://ai.meta.com/blog/) | Blog Meta Research |
+| [OpenAI](https://openai.com/blog/) | Blog OpenAI |
+| [Anthropic](https://www.anthropic.com/) | Blog Anthropic |
+| [DeepMind](https://deepmind.google/blog/) | Blog DeepMind |
+| [Hugging Face](https://huggingface.co/blog) | Communauté open-source ML |
+| [arXiv IA](http://export.arxiv.org/rss/cs.AI) | Prépublications académiques |
+| [Le Monde IA](https://www.lemonde.fr/intelligence-artificielle/) | Actu française |
+| [France-Info IA](https://www.francetvinfo.fr/intelligence-artificielle/) | Actu française |
+| [Papers With Code](https://paperswithcode.com) | Recherche & code |
 
-## 📧 邮件示例
+## 📧 Ce que tu reçois
 
-邮件以HTML格式发送，包含：
-- 按来源分组的摘要新闻
-- 摘要末尾的"当日趋势"部分
-- 顶部进度条：
-  - 所有来源的状态概览
-  - 所有文章的可点击链接
-- 作为附件附带的MP3音频版本
+L'email HTML contient :
+- Un en-tête avec la date du jour
+- Les articles regroupés par source avec un résumé de 2-3 phrases chacun
+- Une section **📌 Tendances du jour** qui dégage les grandes tendances
+- Tous les liens vers les articles originaux
+- Un fichier **MP3** en pièce jointe avec la version audio
 
-## 🔧 自定义
+## 🔧 Personnalisation
 
-### 添加/移除RSS源
+### Ajouter / retirer des sources
 
-编辑 `config/sources.json`：
+Édite `config/sources.json` :
 
 ```json
 [
-  {"name": "源名称", "url": "https://example.com/rss"}
+  {"name": "Ma Source", "url": "https://example.com/rss"}
 ]
 ```
 
-### 变更发送时间
+### Changer l'heure d'envoi
 
-编辑 `.github/workflows/daily-news.yml` 中的cron表达式：
+Modifie l'expression cron dans `.github/workflows/daily-news.yml` :
 
 ```yaml
 on:
   schedule:
-    - cron: "0 6 * * *"   # 每天6:00 UTC
+    - cron: "0 6 * * *"   # 6h UTC = 8h Paris
 ```
 
-### 切换AI模型
+### Changer le modèle Mistral
 
-`scripts/main.py` 中编辑 `model` 参数：
+Dans `scripts/main.py`, modifie le paramètre `model` :
 
 ```python
-model="mistral-small-latest"  # 或 mistral-medium-latest, mistral-large-latest
+model="mistral-small-latest"   # rapide, économique
+model="mistral-medium-latest"  # bon équilibre
+model="mistral-large-latest"   # meilleure qualité
 ```
 
-## 📊 配额
+### Changer la voix TTS
 
-| 服务 | 每日用量 | 免费层限制 |
+Dans `scripts/main.py`, remplace `generate_audio_gtts` par une autre implémentation (ElevenLabs, Google Cloud TTS…).
+
+## 📊 Consommation
+
+| Service | Usage quotidien | Limite gratuite |
 |---|---|---|
-| Mistral API | ~500 tokens | 500K tokens/天 |
-| Gmail SMTP | 1封邮件 | 500封/天 |
-| GitHub Actions | ~2分钟运行时间 | 2000分钟/月 |
-| gTTS | 1个音频 | 无限制 |
+| Mistral API | ~500 tokens | 500 000 tokens/jour |
+| Gmail SMTP | 1 email | 500 emails/jour |
+| GitHub Actions | ~2 min d'exécution | 2000 min/mois |
+| gTTS | 1 fichier audio | Illimité |
 
-## 📄 许可证
+## 📄 Licence
 
-MIT
+MIT — fais ce que tu veux du projet.
