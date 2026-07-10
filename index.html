@@ -320,7 +320,7 @@
     <h1>Votre veille <span>intelligence artificielle</span>, chaque matin</h1>
     <p>Les actualits IA des meilleures sources internationales, resumes par un modele de langage et livres par email tous les jours a 8h. Avec la version audio a ecouter en 5 minutes.</p>
     <form id="subscribe-form" class="form-inline">
-      <input type="email" id="email-input" placeholder="Votre adresse email" required>
+      <input type="email" id="email-input" name="email" placeholder="Votre adresse email" required>
       <button type="submit">S'abonner</button>
     </form>
     <p class="form-status" id="form-status"></p>
@@ -395,7 +395,7 @@
     <h2>Recevez votre premier bilan des demain</h2>
     <p>Gratuit. Un email par jour. Desabonnement instantane.</p>
     <form id="subscribe-form-2" class="form-inline">
-      <input type="email" id="email-input-2" placeholder="Votre adresse email" required>
+      <input type="email" id="email-input-2" name="email" placeholder="Votre adresse email" required>
       <button type="submit">S'abonner</button>
     </form>
     <p class="form-status" id="form-status-2"></p>
@@ -411,39 +411,34 @@
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzo5MrFb7R-T31FdAa5GrdpStGmRNMWTxvivWiSDg_z5nSoNVTgINRFglC0gGiioSGN/exec";
 
-  async function handleSubmit(formId, inputId, statusId) {
+  function setupForm(formId, inputId, statusId) {
     const form = document.getElementById(formId);
     const input = document.getElementById(inputId);
     const status = document.getElementById(statusId);
+    const iframe = document.createElement("iframe");
+    iframe.name = "frame-" + formId;
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = input.value.trim();
+    form.target = iframe.name;
+    form.action = SCRIPT_URL;
+    form.method = "POST";
+
+    form.addEventListener("submit", function() {
+      var email = input.value.trim();
       if (!email) return;
-
       status.textContent = "Inscription en cours...";
       status.style.color = "#667eea";
-
-      try {
-        const resp = await fetch(SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: "email=" + encodeURIComponent(email),
-        });
+      setTimeout(function() {
         status.textContent = "Inscription reussie ! Vous recevrez le premier bilan demain matin.";
         status.style.color = "#22c55e";
         input.value = "";
-      } catch {
-        status.textContent = "Inscription reussie !";
-        status.style.color = "#22c55e";
-        input.value = "";
-      }
+      }, 2000);
     });
   }
 
-  handleSubmit("subscribe-form", "email-input", "form-status");
-  handleSubmit("subscribe-form-2", "email-input-2", "form-status-2");
+  setupForm("subscribe-form", "email-input", "form-status");
+  setupForm("subscribe-form-2", "email-input-2", "form-status-2");
 </script>
 </body>
 </html>
